@@ -8,7 +8,7 @@ import numpy as np
 RESULTS_DIR = os.path.abspath("../results/")
 
 ############################################################
-#  Usiigaci method
+#  Usiigaci method to merge
 ############################################################
 
 IOU_THRESHOLD = 0.6
@@ -158,7 +158,3 @@ def merge_models(model_dirs):
         result = merge_masks(masks)
         cv2.imwrite(os.path.join(submit_dir, filename), result)
     print('\nResults were stored in', submit_dir)
-
-if __name__ == '__main__':
-    model_dirs = ['/Users/AlmasyL/Documents/MA1/Compu/Phase/results/20190313_185754', '/Users/AlmasyL/Documents/MA1/Compu/Phase/results/20190313_185833', '/Users/AlmasyL/Documents/MA1/Compu/Phase/results/20190313_185905']
-    merge_models(model_dirs)

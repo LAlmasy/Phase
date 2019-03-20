@@ -1,12 +1,10 @@
+import sys
 import numpy as np
 import cv2
 import os
 from tqdm import tqdm
 import skimage.morphology
 import matplotlib.pyplot as plt
-
-# Result directory of the project
-RESULTS_DIR = os.path.abspath("../results/")
 
 def combine_neighbour_set(to_merge):
     fusion = False
@@ -89,25 +87,43 @@ def make_mask(mask, prev_mask):
 
     return new_mask
 
-def track_cells(dir, submit_dir):
+def track_cells(data_dir, submit_dir):
     masks = list()
-    mask_ids = sorted(os.listdir(dir))
-    prev_mask = cv2.imread(os.path.join(dir, mask_ids[5]),0)
+    mask_ids = sorted(os.listdir(data_dir))
+    prev_mask = cv2.imread(os.path.join(data_dir, mask_ids[5]),0)
     prev_mask = merge_neighbours(prev_mask)
     cv2.imwrite(os.path.join(submit_dir, mask_ids[0]), prev_mask)
     for it in tqdm(range(1,len(mask_ids))):
-        mask = cv2.imread(os.path.join(dir, mask_ids[it]),0)
+        mask = cv2.imread(os.path.join(data_dir, mask_ids[it]),0)
         mask = merge_neighbours(mask)
         new_mask = make_mask(mask, prev_mask)
         cv2.imwrite(os.path.join(submit_dir, mask_ids[it]), new_mask)
         prev_mask = new_mask
 
+############################################################
+#  Command Line
+############################################################
+
+# Result directory of the project
+RESULTS_DIR = os.path.abspath("../results/")
 
 if __name__ == '__main__':
-    dir = os.path.join(RESULTS_DIR, "seq0_merge")
+    if len(sys.argv) != 2:
+        print('Provide the mask directory as an argument',\
+            '(relative to the results directory)')
+        exit()
 
-    submit_dir = dir + "_tracked"
-    if not os.path.isdir(submit_dir):
-        os.makedirs(submit_dir)
+    data_dir = os.path.join(RESULTS_DIR, sys.argv[1])
 
-    track_cells(dir, submit_dir)
+    if not os.path.isdir(data_dir):
+        print('Could not find directory:', data_dir)
+        exit()
+
+    submit_dir = data_dir + "_tracked"
+    if os.path.isdir(submit_dir):
+        print('Submit directory already exists:', submit_dir)
+        exit()
+
+    os.makedirs(submit_dir)
+
+    track_cells(data_dir, submit_dir)
