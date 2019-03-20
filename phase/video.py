@@ -1,6 +1,7 @@
 import cv2
 import os
 import sys
+import numpy as np
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../")
@@ -29,9 +30,12 @@ frame = cv2.imread(os.path.join(image_dir, images[0]))
 height, width, layers = frame.shape
 
 video = cv2.VideoWriter(video_name, 0, FPS, (width,height))
-
+lut = np.arange(255)
+lut[0] = 255
 for image in images:
-    video.write(cv2.imread(os.path.join(image_dir, image)))
+    im = cv2.imread(os.path.join(image_dir, image))
+    #im[np.where((im == [0,0,0]).all(axis = 2))] = [255,255,255] # Make the background white
+    video.write(im)
 
 cv2.destroyAllWindows()
 video.release()

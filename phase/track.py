@@ -6,6 +6,10 @@ from tqdm import tqdm
 import skimage.morphology
 import matplotlib.pyplot as plt
 
+############################################################
+#  Combine neighbour cells
+############################################################
+
 def combine_neighbour_set(to_merge):
     fusion = False
     for it, m in enumerate(to_merge):
@@ -58,34 +62,42 @@ def merge_neighbours(mask):
             lut[id] = new_id
         new_id += 1
 
-    return lut[mask]
+    return lut[mask].astype(int)
 
+############################################################
+#  Track cells between frames
+############################################################
 
 def make_mask(mask, prev_mask):
-    new_mask = np.zeros(mask.shape)
+    cell_ids = list(np.unique(mask)[1:])
+    available = list(range(1, cell_ids[-1]+1))
+    lut = np.zeros(cell_ids[-1]+1)
 
-    for i in np.unique(prev_mask)[1:]:
+    for prev_cell_id in np.unique(prev_mask)[1:]:
+        if prev_cell_id not in available: break
         max_overlap = 0
         cell = np.zeros(mask.shape)
         best_id = 0
-        for cell_id in np.unique(mask)[1:]:
-            intersect = np.logical_and(prev_mask == i, mask==cell_id).astype(int)
+        for cell_id in cell_ids:
+            intersect = np.logical_and(prev_mask == prev_cell_id, mask==cell_id).astype(int)
             overlap = np.sum(intersect)
             if max_overlap < overlap:
                 max_overlap = overlap
                 best_id = cell_id
         if best_id != 0:
-            cell = (mask==best_id).astype(int)
-            new_mask = new_mask + i*cell
-            mask = mask - best_id*cell
+            cell_ids.remove(best_id)
+            lut[best_id]=prev_cell_id
+            available.remove(prev_cell_id)
 
-    n_max = np.amax(new_mask)
+    # Assign all remaining ids to the cells that where not assigned
+    # to the same id as a cell from the previous frame
+    for cell_id, available_id in zip(cell_ids, available):
+        lut[cell_id] = available_id
 
-    for it, cell_id in enumerate(np.unique(mask)[1:]):
-        cell = (mask==cell_id).astype(int)
-        new_mask = new_mask + (n_max+it)*cell
+    new_mask = lut[mask]
 
     return new_mask
+
 
 def track_cells(data_dir, submit_dir):
     masks = list()
