@@ -10,6 +10,12 @@ import matplotlib.pyplot as plt
 #  Combine neighbour cells
 ############################################################
 
+'''
+Transform the list of binary sets containing the merged neighbours into
+a regrouped list of merged neighbours.
+e.g. [{2,3}, {3,8}, {4,12}] --> [{2,3,8}, {4,12}]
+This is done using recursivity until no fusions of set are possible.
+'''
 def combine_neighbour_set(to_merge):
     fusion = False
     for it, m in enumerate(to_merge):
@@ -27,7 +33,13 @@ def combine_neighbour_set(to_merge):
     else:
         return to_merge
 
+'''
+Merge neighbour cells. A dilaion is applied to each cell's mask and the result
+is compared with the masks of the other cells. If the intersection is big
+enough the cells are considered to be the same and are merged.
 
+Returns: the updated mask with merged cells.
+'''
 def merge_neighbours(mask):
     ids = np.unique(mask)[1:]
     to_merge = list()
@@ -68,16 +80,25 @@ def merge_neighbours(mask):
 #  Track cells between frames
 ############################################################
 
+'''
+Create a new mask based on the input mask on which the cells that were
+on the previous mask keep the same grey value.
+'''
 def make_mask(mask, prev_mask):
+    # List of cell ids in the mask
     cell_ids = list(np.unique(mask)[1:])
+    # List of available grey value
     available = list(range(1, cell_ids[-1]+1))
+    # Look up table to convert the mask to its new values
     lut = np.zeros(cell_ids[-1]+1)
 
+    # For each cell in the previous mask
     for prev_cell_id in np.unique(prev_mask)[1:]:
         if prev_cell_id not in available: break
         max_overlap = 0
         cell = np.zeros(mask.shape)
         best_id = 0
+        # Find the best match between the mask's cells
         for cell_id in cell_ids:
             intersect = np.logical_and(prev_mask == prev_cell_id, mask==cell_id).astype(int)
             overlap = np.sum(intersect)
@@ -98,11 +119,17 @@ def make_mask(mask, prev_mask):
 
     return new_mask
 
+############################################################
+#  Command Line
+############################################################
 
+'''
+Load mask images and apply the merging of neighbours and the tracking of cells
+'''
 def track_cells(data_dir, submit_dir):
     masks = list()
     mask_ids = sorted(os.listdir(data_dir))
-    prev_mask = cv2.imread(os.path.join(data_dir, mask_ids[5]),0)
+    prev_mask = cv2.imread(os.path.join(data_dir, mask_ids[0]),0)
     prev_mask = merge_neighbours(prev_mask)
     cv2.imwrite(os.path.join(submit_dir, mask_ids[0]), prev_mask)
     for it in tqdm(range(1,len(mask_ids))):
@@ -111,10 +138,6 @@ def track_cells(data_dir, submit_dir):
         new_mask = make_mask(mask, prev_mask)
         cv2.imwrite(os.path.join(submit_dir, mask_ids[it]), new_mask)
         prev_mask = new_mask
-
-############################################################
-#  Command Line
-############################################################
 
 # Result directory of the project
 RESULTS_DIR = os.path.abspath("../results/")

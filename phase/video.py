@@ -1,7 +1,14 @@
+'''
+Create a video from the images in the given directory.r
+'''
+
 import cv2
+import skimage.color
 import os
 import sys
 import numpy as np
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../")
@@ -26,15 +33,17 @@ else:
 
 # Create video
 images = sorted([img for img in os.listdir(image_dir) if img.endswith(".png") and not img.startswith('.')])
-frame = cv2.imread(os.path.join(image_dir, images[0]))
-height, width, layers = frame.shape
+frame = cv2.imread(os.path.join(image_dir, images[0]), 0)
+height, width = frame.shape
 
 video = cv2.VideoWriter(video_name, 0, FPS, (width,height))
 lut = np.arange(255)
 lut[0] = 255
-for image in images:
-    im = cv2.imread(os.path.join(image_dir, image))
-    #im[np.where((im == [0,0,0]).all(axis = 2))] = [255,255,255] # Make the background white
+for image in tqdm(images):
+    im = cv2.imread(os.path.join(image_dir, image), 0)
+
+    im = skimage.color.label2rgb(im, bg_label=0)
+    im = (im*255).astype('uint8')
     video.write(im)
 
 cv2.destroyAllWindows()

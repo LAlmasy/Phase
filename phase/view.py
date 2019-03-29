@@ -1,5 +1,11 @@
+'''
+Visualise a mask over an image.
+'''
+
 import matplotlib.pyplot as plt
-import cv2
+import skimage.segmentation
+import skimage.io
+import skimage.color
 import os
 import numpy as np
 import argparse
@@ -28,15 +34,24 @@ if not os.path.isfile(phase):
     print('Invalid image path:', phase)
     exit()
 
-phase = cv2.imread(phase, 0)
-mask = cv2.imread(mask, 0)
+phase = skimage.io.imread(phase)
+mask = skimage.io.imread(mask)
 
-mask = np.ma.masked_where(mask < 0.9, mask)
+boundaries = False
+if boundaries:
+    marked = skimage.segmentation.mark_boundaries(phase, mask)
 
+    plt.figure(figsize=(15,10))
 
-plt.figure(figsize=(15,10))
+    plt.imshow(marked)
+else:
+    colored_mask = m = skimage.color.label2rgb(mask, bg_label=0)
 
-plt.imshow(phase, cmap=plt.cm.gray)
-plt.imshow(mask, alpha=0.6)
+    colored_mask = np.ma.masked_where(colored_mask == (0,0,0), colored_mask)
+
+    plt.figure(figsize=(15,10))
+
+    plt.imshow(phase, cmap=plt.cm.gray)
+    plt.imshow(colored_mask, alpha=0.5)
 
 plt.show()
