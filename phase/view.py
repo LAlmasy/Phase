@@ -8,21 +8,14 @@ import skimage.io
 import skimage.color
 import os
 import numpy as np
-import argparse
+from utils.argparsers import parse_view_arguments
 
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../")
 
 # Parse command line arguments
-parser = argparse.ArgumentParser(
-    description='Visualisation of an image and its mask')
-parser.add_argument('--img', required=True,
-                    metavar="/path/to/image.*",
-                    help='Path to image')
-parser.add_argument('--mask', required=True,
-                    metavar="/path/to/mask.*",
-                    help="Path to mask")
-args = parser.parse_args()
+args = parse_view_arguments()
+# args are mask, img and borders
 
 mask = os.path.join(ROOT_DIR, args.mask)
 phase = os.path.join(ROOT_DIR, args.img)
@@ -37,8 +30,7 @@ if not os.path.isfile(phase):
 phase = skimage.io.imread(phase)
 mask = skimage.io.imread(mask)
 
-boundaries = False
-if boundaries:
+if args.borders:
     marked = skimage.segmentation.mark_boundaries(phase, mask)
 
     plt.figure(figsize=(15,10))

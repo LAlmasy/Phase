@@ -3,6 +3,7 @@ from tqdm import tqdm
 import cv2
 import datetime
 import numpy as np
+import sys
 
 # Result directory of the project
 RESULTS_DIR = os.path.abspath("../results/")
@@ -158,3 +159,17 @@ def merge_models(model_dirs):
         result = merge_masks(masks)
         cv2.imwrite(os.path.join(submit_dir, filename), result)
     print('\nResults were stored in', submit_dir)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 3:
+        print('Provide at least two mask directories to merge.')
+        exit()
+
+    mask_dirs = sys.argv[1:]
+    for dir in mask_dirs:
+        if not os.path.isdir(dir):
+            print(dir, 'is not a directory.')
+            exit()
+
+    merge_models(mask_dirs)

@@ -1,7 +1,9 @@
-from phase import *
+from utils.phase import *
 
 from tqdm import tqdm
+import argparse
 from merge import merge_models
+from utils.argparsers import parse_inference_args
 
 # Results directory
 # Save submission files here
@@ -61,22 +63,10 @@ def is_valid_weights(weights):
     return os.path.splitext(weights)[1] == '.h5' and not weights.startswith('.')
 
 if __name__ == '__main__':
-    import argparse
-
     # Parse command line arguments
-    parser = argparse.ArgumentParser(
-        description='Inference for phase contrast images')
-    parser.add_argument('--infer_data', required=True,
-                        metavar="/path/to/infer/dataset/",
-                        help='Directory of the inference data')
-    parser.add_argument('--weights', required=True,
-                        metavar="/path/to/weights",
-                        help="Path to weights")
-    parser.add_argument('--single_dir', required=False,
-                        action='store_true',
-                        default=False,
-                        help='Data is in a single directory (default=false)')
-    args = parser.parse_args()
+    args = parse_inference_args()
+    # args are infer_data, weights, not_single_dir and merge
+
 
     # Select inference data directory
     args.infer_data = os.path.join(ROOT_DIR, args.infer_data)
@@ -85,7 +75,7 @@ if __name__ == '__main__':
         exit()
     print("Inference dataset: ", args.infer_data)
 
-    if args.single_dir:
+    if not args.not_single_dir:
         print('Infering on data located in a single directory.')
 
     # Select weights file to load
@@ -111,7 +101,7 @@ if __name__ == '__main__':
 
     # Single weights file
     if os.path.isfile(args.weights) and is_valid_weights(args.weights):
-        run_inference(model, args.weights, args.infer_data, args.single_dir)
+        run_inference(model, args.weights, args.infer_data, not args.not_single_dir)
 
     # Multiple weights files located in the given directory
     elif os.path.isdir(args.weights):
@@ -121,8 +111,12 @@ if __name__ == '__main__':
             print('\nModel {}/{}:'.format(it+1, len(weights_files)))
             weight_file = os.path.join(args.weights, weight_file)
             results.append(run_inference(model, weight_file,
-                args.infer_data, args.single_dir))
-        merge_models(results)
+                args.infer_data, not args.not_single_dir))
+        if args.merge:
+            merge_models(results)
+        else:
+            print('\nUse "python merge.py ' + " ".join(results) + '" \
+                to merge the masks from the different weights.')
 
 
     else: print('\nInvalid weights file')
