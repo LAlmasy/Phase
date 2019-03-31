@@ -5,5 +5,7 @@ __pycache__/
 train_data/
 test_data/
 val_data/
-results/
-weights/
+results/*
+!results/.gitkeep
+weights/*
+!weights/.gitkeep
