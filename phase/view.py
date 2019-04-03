@@ -37,7 +37,7 @@ if args.borders:
 
     plt.imshow(marked)
 else:
-    colored_mask = m = skimage.color.label2rgb(mask, bg_label=0)
+    colored_mask = skimage.color.label2rgb(mask, bg_label=0)
 
     colored_mask = np.ma.masked_where(colored_mask == (0,0,0), colored_mask)
 
